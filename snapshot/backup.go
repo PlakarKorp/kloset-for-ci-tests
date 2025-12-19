@@ -756,6 +756,7 @@ func (snap *Builder) checkVFSCache(sourceCtx *sourceContext, record *connectors.
 	snap.emitter.PathCached(record.Pathname)
 
 	// resolve MAC for object and mark Packfile
+	_ = snap.repository.BlobExists(resources.RT_VFS_ENTRY, entry.MAC)
 
 	if record.FileInfo.Mode()&os.ModeSymlink != 0 {
 		snap.emitter.SymlinkCached(record.Pathname)
@@ -769,6 +770,10 @@ func (snap *Builder) checkVFSCache(sourceCtx *sourceContext, record *connectors.
 	snap.emitter.FileCached(record.Pathname, entry.FileInfo)
 
 	// resolve MAC for chunks and mark Packfile
+	_ = snap.repository.BlobExists(resources.RT_OBJECT, entry.Object)
+	for _, ch := range entry.ResolvedObject.Chunks {
+		_ = snap.repository.BlobExists(resources.RT_CHUNK, ch.ContentMAC)
+	}
 
 	return &objects.CachedPath{
 		MAC:         entry.MAC,
