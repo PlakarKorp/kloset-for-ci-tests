@@ -755,6 +755,8 @@ func (snap *Builder) checkVFSCache(sourceCtx *sourceContext, record *connectors.
 
 	snap.emitter.PathCached(record.Pathname)
 
+	// resolve MAC for object and mark Packfile
+
 	if record.FileInfo.Mode()&os.ModeSymlink != 0 {
 		snap.emitter.SymlinkCached(record.Pathname)
 		return &objects.CachedPath{
@@ -765,6 +767,9 @@ func (snap *Builder) checkVFSCache(sourceCtx *sourceContext, record *connectors.
 	}
 
 	snap.emitter.FileCached(record.Pathname, entry.FileInfo)
+
+	// resolve MAC for chunks and mark Packfile
+
 	return &objects.CachedPath{
 		MAC:         entry.MAC,
 		ObjectMAC:   entry.Object,
