@@ -141,6 +141,12 @@ func (r *RepositoryWriter) currentDeltaState() *state.LocalState {
 	return r.deltaState[r.currentStateID]
 }
 
+func (r *RepositoryWriter) touchPackfile(packfileMAC objects.MAC) {
+	r.touchedPackfilesMtx.Lock()
+	r.touchedPackfiles[packfileMAC] = struct{}{}
+	r.touchedPackfilesMtx.Unlock()
+}
+
 func (r *RepositoryWriter) BlobExists(Type resources.Type, mac objects.MAC) bool {
 	t0 := time.Now()
 	defer func() {
@@ -157,11 +163,7 @@ func (r *RepositoryWriter) BlobExists(Type resources.Type, mac objects.MAC) bool
 		packfileMAC, exists := ds.BlobExists(Type, mac)
 		if exists {
 			r.transactionMtx.RUnlock()
-
-			r.touchedPackfilesMtx.Lock()
-			r.touchedPackfiles[packfileMAC] = struct{}{}
-			r.touchedPackfilesMtx.Unlock()
-
+			r.touchPackfile(packfileMAC)
 			return true
 		}
 	}
@@ -169,9 +171,7 @@ func (r *RepositoryWriter) BlobExists(Type resources.Type, mac objects.MAC) bool
 
 	packfileMAC, exists := r.state.BlobExists(Type, mac)
 	if exists {
-		r.touchedPackfilesMtx.Lock()
-		r.touchedPackfiles[packfileMAC] = struct{}{}
-		r.touchedPackfilesMtx.Unlock()
+		r.touchPackfile(packfileMAC)
 	}
 	return exists
 }
@@ -251,9 +251,7 @@ func (r *RepositoryWriter) PutPackfile(pfile packfile.Packfile) error {
 		return err
 	}
 
-	r.touchedPackfilesMtx.Lock()
-	r.touchedPackfiles[mac] = struct{}{}
-	r.touchedPackfilesMtx.Unlock()
+	r.touchPackfile(mac)
 
 	span := r.ioStats.GetWriteSpan()
 	nbytes, err := r.store.Put(r.appContext, storage.StorageResourcePackfile, mac, rd)
@@ -307,9 +305,7 @@ func (r *RepositoryWriter) PutPtarPackfile(packfile *packer.PackWriter) error {
 		return err
 	}
 
-	r.touchedPackfilesMtx.Lock()
-	r.touchedPackfiles[mac] = struct{}{}
-	r.touchedPackfilesMtx.Unlock()
+	r.touchPackfile(mac)
 
 	span := r.ioStats.GetWriteSpan()
 	nbytes, err := r.store.Put(r.appContext, storage.StorageResourcePackfile, mac, rd)
