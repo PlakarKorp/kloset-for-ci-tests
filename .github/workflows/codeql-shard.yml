@@ -1,0 +1,16 @@
+name: Code Coverage Report
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '15 9 * * 6'
+  workflow_dispatch:
+
+jobs:
+  coverage:
+    uses: PlakarKorp/ci-workflows/.github/workflows/test-coverage.yml@main
+    with:
+      languages: '["go"]'
