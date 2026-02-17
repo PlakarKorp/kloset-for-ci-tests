@@ -14,3 +14,5 @@ jobs:
     uses: PlakarKorp/ci-workflows/.github/workflows/test-coverage.yml@main
     with:
       languages: '["go"]'
+
+      
