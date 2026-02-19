@@ -63,7 +63,7 @@ func NewSQLState(path string, ro bool) (*SQLState, error) {
 			type INTEGER NOT NULL,
 			packfile TEXT NOT NULL,
 			payload BLOB NOT NULL,
-			UNIQUE(mac, type, packfile)
+			UNIQUE(type, mac, packfile)
 		);`
 		if _, err := db.Exec(create); err != nil {
 			return nil, err
@@ -73,7 +73,7 @@ func NewSQLState(path string, ro bool) (*SQLState, error) {
 			mac TEXT NOT NULL,
 			type INTEGER NOT NULL,
 			payload BLOB NOT NULL,
-			UNIQUE(mac, type)
+			UNIQUE(type, mac)
 		);`
 
 		if _, err := db.Exec(create); err != nil {
@@ -217,7 +217,7 @@ func (c *SQLState) GetStates() (map[objects.MAC][]byte, error) {
 
 func (c *SQLState) DelState(stateID objects.MAC) error {
 	stateHex := hex.EncodeToString(stateID[:])
-	_, err := c.db.Exec("DELETE FROM packfiles WHERE mac = ?;", stateHex)
+	_, err := c.db.Exec("DELETE FROM states WHERE mac = ?;", stateHex)
 
 	return err
 }
@@ -537,7 +537,7 @@ func (c *SQLState) GetConfiguration(key string) ([]byte, error) {
 
 func (c *SQLState) GetConfigurations() iter.Seq[[]byte] {
 	return func(yield func([]byte) bool) {
-		query := "SELECT mac, payload FROM configurations;"
+		query := "SELECT key, data FROM configurations;"
 
 		rows, err := c.db.Query(query)
 		if err != nil {
